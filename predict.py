@@ -155,41 +155,75 @@ def run_openai_api(image_data, prompt, model=MODEL):
         return None
 """
 
-def generate_special_text(image_path, parent_folder, features=None):
+def has_reverse_name(name_set, name):
     """
-    根据 features, image_path 和 parent_folder 生成 special_text。
+    檢查 name_set 中是否存在 name 的相反名稱（中間有一個空格）。
+    """
+    name_parts = name.split()
+    if len(name_parts) == 2:
+        reverse_name = f"{name_parts[1]} {name_parts[0]}"
+        if reverse_name in name_set:
+            return True
+    return False
+
+def generate_special_text(image_path, folder_name, features=None, chars=None):
+    """
+    根據 features, image_path 和 parent_folder 生成 special_text。
     """
     base_file_name = os.path.splitext(image_path)[0]
     boorutag_path = None
-
-    # 查找 boorutag 文件路径
+    
+    # 查找 boorutag 文件路徑
     for ext in ['.jpg.boorutag', '.png.boorutag']:
         potential_path = base_file_name + ext
         if os.path.exists(potential_path):
             boorutag_path = potential_path
             break
 
-    # 处理 boorutag 文件内容
+    chartags = set()
+
+    # 獲取 parent_folder 並添加 chartag_from_folder
+    parent_folder = Path(image_path).parent.name
+    if folder_name and "_" in parent_folder and parent_folder.split("_")[0].isdigit():
+        chartag_from_folder = parent_folder.split('_')[1].replace('_', ' ').strip()
+        chartags.add(chartag_from_folder)
+
+    # 處理 boorutag 文件內容
     if boorutag_path:
         try:
             with open(boorutag_path, 'r', encoding='cp950') as file:
-                first_line = file.readline().strip()
-                first_line = re.sub(r' \([^)]*\)', '', first_line)
-                chartags = [tag.strip() for tag in first_line.split(',')]
-
-                if not chartags:
-                    return f"{parent_folder.split('_')[1]} is in this image"
-
-                random.shuffle(chartags)
-                if "solo" in features:
-                    return f'the character in this image is {" ".join(chartags)}'
-                else:
-                    return f'the characters in this image are {" and ".join(chartags)}'
+                first_line = file.readline()
+                first_line_cleaned = re.sub(r'\(.*?\)', '', first_line)
+                for tag in first_line_cleaned.split(','):
+                    cleaned_tag = tag.replace('\\', '').replace('_', ' ').strip()
+                    if not has_reverse_name(chartags, cleaned_tag):
+                        chartags.add(cleaned_tag)
         except Exception as e:
-            return f"{parent_folder.split('_')[1]} is in this image"
+            # 讀取文件或處理過程中發生錯誤
+            pass
 
-    # 默认情况
-    return f"{parent_folder.split('_')[1]} is in this image"
+    # 處理 chars.keys()
+    if chars:
+        for key in chars.keys():
+            cleaned_key = re.sub(r'\(.*?\)', '', key).replace('\\', '').replace('_', ' ').strip()
+            if not has_reverse_name(chartags, cleaned_key):
+                chartags.add(cleaned_key)
+
+    # 將 chartags 轉換為列表並隨機打亂
+    chartags = list(chartags)
+    random.shuffle(chartags)
+    if chartag_from_folder and features and "solo" in features:
+        return f"{chartag_from_folder} is in this image"
+    
+    if not chartag_from_folder and features and "solo" in features:
+        return f"{' '.join(chartags)} is in this image" if chartags else ""
+    
+    if chartags:
+        if len(chartags)==1:
+            chartags.append('persons')    
+        return f'the characters in this image are {" and ".join(chartags)}'
+    
+    return ''
 
 def process_image(image_path_folder_name):
     """
@@ -212,7 +246,7 @@ def process_image(image_path_folder_name):
         if args.moe:
             moe_caption = process_moe_image(image_path, moe_model, moe_tokenizer, moe_processor)
             if args.caption_style != 'pure':
-                rating, features, chars = get_wd14_tags(image_buffer, character_threshold=1, general_threshold=0.2682, drop_overlap=True)
+                rating, features, chars = get_wd14_tags(image_buffer, character_threshold=0.7, general_threshold=0.2682, drop_overlap=True)
                 if 'solo' in features:
                     features = drop_basic_character_tags(features)
                 wd14_caption = tags_to_text(features, use_escape=True, use_spaces=True)
@@ -230,17 +264,14 @@ def process_image(image_path_folder_name):
                     tags_text = wd14_caption
 
         else:
-            rating, features, chars = get_wd14_tags(image_buffer, character_threshold=1, general_threshold=0.2682, drop_overlap=True)
+            rating, features, chars = get_wd14_tags(image_buffer, character_threshold=0.7, general_threshold=0.2682, drop_overlap=True)
             if 'solo' in features:
                 features = drop_basic_character_tags(features)
             tags_text = tags_to_text(features, use_escape=True, use_spaces=True)
 
-        if folder_name:
-            parent_folder = Path(image_path).parent.name
-            if "_" in parent_folder and parent_folder.split("_")[0].isdigit():
-                special_text = generate_special_text(image_path, parent_folder, features)                
-                tags_lines = tags_text.split('\n')
-                tags_text = '\n'.join([f"{special_text}, {line}" for line in tags_lines])
+        special_text = generate_special_text(image_path, folder_name, features, chars)            
+        tags_lines = tags_text.split('\n')
+        tags_text = '\n'.join([f"{special_text}, {line}" for line in tags_lines])
         
         with open(tag_file_path, 'w', encoding='utf-8') as f:
             f.write(tags_text.lower())
