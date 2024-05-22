@@ -218,7 +218,7 @@ def process_image(image_path_folder_name):
                 wd14_caption = tags_to_text(features, use_escape=True, use_spaces=True)
                 rating = max(rating, key=rating.get)
             if args.caption_style == 'mixed':
-                tags_text = f"{moe_caption} the whole image consists of the following: {wd14_caption}\n{moe_caption}"
+                tags_text = f"{moe_caption} the whole image consists of the following: {wd14_caption}\n{moe_caption}\n"
             elif args.caption_style == 'wildcards':
                 tags_text = f"{moe_caption}\n{wd14_caption}"
             elif args.caption_style == 'pure':
