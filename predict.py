@@ -155,7 +155,7 @@ def run_openai_api(image_data, prompt, model=MODEL):
         return None
 """
 
-def generate_special_text(features=None, image_path, parent_folder):
+def generate_special_text(image_path, parent_folder, features=None):
     """
     根据 features, image_path 和 parent_folder 生成 special_text。
     """
@@ -238,7 +238,7 @@ def process_image(image_path_folder_name):
         if folder_name:
             parent_folder = Path(image_path).parent.name
             if "_" in parent_folder and parent_folder.split("_")[0].isdigit():
-                special_text = generate_special_text(features, image_path, parent_folder)                
+                special_text = generate_special_text(image_path, parent_folder, features)                
                 tags_lines = tags_text.split('\n')
                 tags_text = '\n'.join([f"{special_text}, {line}" for line in tags_lines])
         
