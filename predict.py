@@ -269,7 +269,8 @@ def process_image(image_path_folder_name):
                 features = drop_basic_character_tags(features)
             tags_text = tags_to_text(features, use_escape=True, use_spaces=True)
 
-        special_text = generate_special_text(image_path, folder_name, features, chars)            
+        special_text = generate_special_text(image_path, folder_name, features, chars)
+        special_text += f", rating:{rating}"
         tags_lines = tags_text.split('\n')
         tags_text = '\n'.join([f"{special_text}, {line}" for line in tags_lines])
         
