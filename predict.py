@@ -172,6 +172,7 @@ def generate_special_text(image_path, folder_name, features=None, chars=None):
     """
     base_file_name = os.path.splitext(image_path)[0]
     boorutag_path = None
+    chartag_from_folder = None
     
     # 查找 boorutag 文件路徑
     for ext in ['.jpg.boorutag', '.png.boorutag']:
