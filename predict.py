@@ -67,7 +67,7 @@ def process_moe_image(image, model, tokenizer, processor):
     conv_mode = "phi"
     conv = conv_templates[conv_mode].copy()
     roles = conv.roles
-    prompt = DEFAULT_IMAGE_TOKEN + '\nWhat happens in this image? What is there besides the main subject? What is style of the image?'
+    prompt = DEFAULT_IMAGE_TOKEN + + '\nWhat happens in this image? What does this image appears to be? How about this image?'
     conv.append_message(conv.roles[0], prompt)
     conv.append_message(conv.roles[1], None)
     prompt = conv.get_prompt()
