@@ -4,6 +4,7 @@ import os
 import base64
 import re
 import random
+import fnmatch
 # 自動安裝需要的庫
 def install_and_import(package):
     try:
@@ -20,7 +21,6 @@ libraries = [
     'pathlib',
     'datetime',
     'torch',
-    'fnmatch',
     'moellava'
 ]
 
