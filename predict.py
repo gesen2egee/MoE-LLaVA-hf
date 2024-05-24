@@ -279,10 +279,13 @@ def process_image(image_path, args):
         print(f"Failed to process image {image_path}: {e}")
 
 def find_and_process_images(directory, args):
-    extensions = ["*.jpg", "*.png", "*.jpeg", "*.webp"]
+    extensions = ["*.jpg", "*.png", "*.jpeg", "*.webp", "*.bmp"]
     image_paths = []
-    for ext in extensions:
-        image_paths.extend(glob(os.path.join(directory, "**", ext), recursive=True))
+    for root, dirs, files in os.walk(directory):
+        for ext in extensions:
+            for file in files:
+                if fnmatch.fnmatchcase(file, ext) or fnmatch.fnmatchcase(file, ext.upper()):
+                    image_paths.append(os.path.join(root, file))
 
     for image_path in tqdm(image_paths, desc="處理圖片"):
         try:
