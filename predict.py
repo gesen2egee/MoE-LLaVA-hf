@@ -240,14 +240,14 @@ def process_image(image_path, args):
                 rating, features, chars = get_wd14_tags(image_resize, character_threshold=0.7, general_threshold=0.2682, model_name="ConvNext_v3", drop_overlap=True)
                 features, keep_tags = process_features(drop_blacklisted_tags(features))
                 #if features and "solo" in features:
-                #    features = drop_basic_character_tags(features)
+                #    features = drop_basic_character_tags(features)   #用來自動刪除角色特徵
                 wd14_caption = tags_to_text(features, use_escape=False, use_spaces=True)
                 rating = max(rating, key=rating.get)
             if args.caption_style == 'mixed':
                 tags_text = (
                     f"the whole image consists of the following: |||{wd14_caption}|||, {moe_caption}\n"
                     f"{moe_caption}\n{moe_caption}"
-                    #+ ('\n' if folder_name else '')
+                    + ('\n' if folder_name else '')
                     + ('\n' if "solo" in features else '')
                 )
             elif args.caption_style == 'wildcards':
