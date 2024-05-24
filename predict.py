@@ -64,7 +64,7 @@ def initialize_moe_model(model_path=MOE_MODEL_PATH, device=MOE_DEVICE):
     return tokenizer, model, processor
 
 def process_moe_image(image, model, tokenizer, processor):
-    image_tensor = processor['image'].preprocess(Image.open(image).convert('RGB'), return_tensors='pt')['pixel_values'].to(model.device, dtype=torch.float16)
+    image_tensor = processor['image'].preprocess(image.convert('RGB'), return_tensors='pt')['pixel_values'].to(model.device, dtype=torch.float16)
     conv_mode = "phi"
     conv = conv_templates[conv_mode].copy()
     roles = conv.roles
@@ -94,7 +94,22 @@ def process_moe_image(image, model, tokenizer, processor):
 
     outputs = tokenizer.decode(output_ids[0, input_ids.shape[1]:], skip_special_tokens=True).strip().replace('\n', ' ')
     return outputs
-
+    
+def resize_image(image_path, max_size=512):
+    """
+    縮小圖像使其最大邊不超過 max_size，返回縮小後的圖像數據
+    """
+    image = Image.open(image_path)
+    if max(image.width, image.height) > max_size:
+        if image.width > image.height:
+            new_width = max_size
+            new_height = int(max_size * image.height / image.width)
+        else:
+            new_height = max_size
+            new_width = int(max_size * image.width / image.height)
+        image = image.resize((new_width, new_height), Image.LANCZOS)
+    return image
+    
 def process_features(features: dict) -> (dict, str):
     """
     處理features字典，移除指定模式的鍵值對並生成keep_tags字串。
