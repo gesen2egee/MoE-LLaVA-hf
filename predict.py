@@ -5,6 +5,7 @@ import base64
 import re
 import random
 import fnmatch
+
 # 自動安裝需要的庫
 def install_and_import(package):
     try:
@@ -27,7 +28,6 @@ libraries = [
 for lib in libraries:
     install_and_import(lib)
 
-
 from io import BytesIO
 from pathlib import Path
 from glob import glob
@@ -40,18 +40,17 @@ from moellava.conversation import conv_templates, SeparatorStyle
 from moellava.model.builder import load_pretrained_model
 from moellava.utils import disable_torch_init
 from moellava.mm_utils import tokenizer_image_token, get_model_name_from_path, KeywordsStoppingCriteria
-# from openai import OpenAI
 
 # 嘗試導入 dghs-imgutils[gpu]，如果未安裝，則跳過相關處理
 try:
-    from imgutils.tagging import get_wd14_tags, tags_to_text, drop_blacklisted_tags, drop_basic_character_tags
+    from imgutils.tagging import get_wd14_tags, tags_to_text, drop_blacklisted_tags, drop_basic_character_tags, drop_overlap_tags
     from imgutils.validate import anime_dbrating
 except ImportError:
     print("正在安裝 dghs-imgutils[gpu]...")
     subprocess.run(["pip", "install", "dghs-imgutils[gpu]"], check=True)
-    from imgutils.tagging import get_wd14_tags, tags_to_text, drop_blacklisted_tags, drop_basic_character_tags
+    from imgutils.tagging import get_wd14_tags, tags_to_text, drop_blacklisted_tags, drop_basic_character_tags, drop_overlap_tags
     from imgutils.validate import anime_dbrating
-    
+
 # 設置 MoE-LLaVA 模型參數
 #MOE_MODEL_PATH = 'LanguageBind/MoE-LLaVA-StableLM-1.6B-4e-384'
 MOE_MODEL_PATH = 'LanguageBind/MoE-LLaVA-Phi2-2.7B-4e' #VRAM >= 16G
@@ -63,38 +62,6 @@ def initialize_moe_model(model_path=MOE_MODEL_PATH, device=MOE_DEVICE):
     tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name, load_8bit=False, load_4bit=False, device=device)
     return tokenizer, model, processor
 
-def process_moe_image(image, model, tokenizer, processor):
-    image_tensor = processor['image'].preprocess(image.convert('RGB'), return_tensors='pt')['pixel_values'].to(model.device, dtype=torch.float16)
-    conv_mode = "phi"
-    conv = conv_templates[conv_mode].copy()
-    roles = conv.roles
-    prompt = DEFAULT_IMAGE_TOKEN + + '\nWhat happens in this image? What does this image appears to be? How about this image?'
-    conv.append_message(conv.roles[0], prompt)
-    conv.append_message(conv.roles[1], None)
-    prompt = conv.get_prompt()
-    input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).cuda()
-    
-    attention_mask = input_ids.ne(tokenizer.pad_token_id).cuda()  # 创建注意力掩码
-    stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
-    keywords = [stop_str]
-    stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
-
-    with torch.inference_mode():
-        with torch.no_grad():
-            output_ids = model.generate(
-                input_ids,
-                attention_mask=attention_mask,  # 传递注意力掩码
-                images=image_tensor,
-                do_sample=True,
-                temperature=0.2,
-                max_new_tokens=200,
-                use_cache=True,
-                pad_token_id=tokenizer.eos_token_id,  # 设置 pad_token_id
-                stopping_criteria=[stopping_criteria])
-
-    outputs = tokenizer.decode(output_ids[0, input_ids.shape[1]:], skip_special_tokens=True).strip().replace('\n', ' ')
-    return outputs
-    
 def resize_image(image_path, max_size=512):
     """
     縮小圖像使其最大邊不超過 max_size，返回縮小後的圖像數據
@@ -109,7 +76,39 @@ def resize_image(image_path, max_size=512):
             new_width = int(max_size * image.width / image.height)
         image = image.resize((new_width, new_height), Image.LANCZOS)
     return image
+
+def process_moe_image(image, model, tokenizer, processor):
+    image_tensor = processor['image'].preprocess(image.convert('RGB'), return_tensors='pt')['pixel_values'].to(model.device, dtype=torch.float16)
+    conv_mode = "phi"
+    conv = conv_templates[conv_mode].copy()
+    roles = conv.roles
+    prompt = DEFAULT_IMAGE_TOKEN + '\nWhat happens in this image? What does this image appears to be? How about this image?'
+    conv.append_message(conv.roles[0], prompt)
+    conv.append_message(conv.roles[1], None)
+    prompt = conv.get_prompt()
+    input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).cuda()
     
+    attention_mask = input_ids.ne(tokenizer.pad_token_id).cuda()
+    stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
+    keywords = [stop_str]
+    stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
+
+    with torch.inference_mode():
+        with torch.no_grad():
+            output_ids = model.generate(
+                input_ids,
+                attention_mask=attention_mask,
+                images=image_tensor,
+                do_sample=True,
+                temperature=0.2,
+                max_new_tokens=200,
+                use_cache=True,
+                pad_token_id=tokenizer.eos_token_id,
+                stopping_criteria=[stopping_criteria])
+
+    outputs = tokenizer.decode(output_ids[0, input_ids.shape[1]:], skip_special_tokens=True).strip().replace('\n', ' ')
+    return outputs
+
 def process_features(features: dict) -> (dict, str):
     """
     處理features字典，移除指定模式的鍵值對並生成keep_tags字串。
@@ -242,7 +241,7 @@ def process_image(image_path, args):
     # 檢查文件最後修改時間，如果在一周內則略過
     if tag_file_path.exists() and not args.force:
         last_modified_time = datetime.fromtimestamp(tag_file_path.stat().st_mtime)
-        if datetime.now() - last_modified_time < timedelta(days=7):
+        if datetime.now() - last_modified_time < timedelta(days=1):
             print(f"Skipping {tag_file_path} as it was modified within the last week.")
             return None, None, 'skipped'
     
@@ -256,7 +255,7 @@ def process_image(image_path, args):
                 rating, features, chars = get_wd14_tags(image_resize, character_threshold=0.7, general_threshold=0.2682, model_name="ConvNext_v3", drop_overlap=True)
                 features, keep_tags = process_features(drop_blacklisted_tags(features))
                 #if features and "solo" in features:
-                #    features = drop_basic_character_tags(features)   #用來自動刪除角色特徵
+                #    features = drop_basic_character_tags(features)
                 wd14_caption = tags_to_text(features, use_escape=False, use_spaces=True)
                 rating = max(rating, key=rating.get)
             if args.caption_style == 'mixed':
@@ -314,9 +313,9 @@ def convert_path_format(directory):
     转换路径格式为WSL路径格式
     """
     directory = directory.replace('\\', '/')
-    if directory[1:3] == ':/':
-        drive_letter = directory[0].lower()
-        return directory.replace(f"{directory[0]}:/", f"/mnt/{drive_letter}/")
+    #if directory[1:3] == ':/':
+    #    drive_letter = directory[0].lower()
+    #    return directory.replace(f"{directory[0]}:/", f"/mnt/{drive_letter}/")
     return directory
 
 
