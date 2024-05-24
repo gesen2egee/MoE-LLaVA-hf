@@ -20,7 +20,7 @@ libraries = [
     'pathlib',
     'datetime',
     'torch',
-    'fnmatch'
+    'fnmatch',
     'moellava'
 ]
 
