@@ -77,12 +77,39 @@ def resize_image(image_path, max_size=512):
         image = image.resize((new_width, new_height), Image.LANCZOS)
     return image
 
-def process_moe_image(image, model, tokenizer, processor):
+def modify_prompt(features: dict) -> str:
+    # 基本提示詞
+    base_prompt = '\nWhat happens in this image? What does this image appears to be? How about this image?'
+    prompt_parts = base_prompt.split(' What does this image appears to be?')
+    
+    # 檢查 'solo' 是否在 features 的 keys 裡面
+    if 'solo' not in features.keys():
+        prompt_parts[0] += ' What are positions of whore image?'
+    
+    pen_keys = [key for key in features.keys() if re.match(r'.*penis.*', key)]
+    if pen_keys:
+        prompt_parts[0] += " Where male's penis on?"
+    
+    # 組合提示詞
+    default_prompt = ' What does this image appears to be?'.join(prompt_parts)
+
+    # 檢查是否有 keys 符合 '^holding_.*$' 的正則表達式
+    holding_keys = [key for key in features.keys() if re.match(r'^holding_.*$', key) or re.match(r'^.*grab.*$', key) or re.match(r'^.*behind.*$', key)]
+    if holding_keys:
+        holding_keys_str = ', '.join(key.replace('_', '') for key in holding_keys)
+        default_prompt += f' Is {holding_keys_str}?'
+    
+    return default_prompt
+
+def process_moe_image(image, model, tokenizer, processor, features=None):
     image_tensor = processor['image'].preprocess(image.convert('RGB'), return_tensors='pt')['pixel_values'].to(model.device, dtype=torch.float16)
     conv_mode = "phi"
     conv = conv_templates[conv_mode].copy()
     roles = conv.roles
-    prompt = DEFAULT_IMAGE_TOKEN + '\nWhat happens in this image? What does this image appears to be? How about this image?'
+    default_prompt ='\nWhat happens in this image? What does this image appears to be? How about this image?'
+    if features:
+        default_prompt = modify_prompt(features)    
+    prompt = DEFAULT_IMAGE_TOKEN + default_prompt
     conv.append_message(conv.roles[0], prompt)
     conv.append_message(conv.roles[1], None)
     prompt = conv.get_prompt()
@@ -250,7 +277,6 @@ def process_image(image_path, args):
 
         # 使用 imgutils 獲取圖片等級
         if args.moe:
-            moe_caption = process_moe_image(image_resize, moe_model, moe_tokenizer, moe_processor)
             if args.caption_style != 'pure':
                 rating, features, chars = get_wd14_tags(image_resize, character_threshold=0.7, general_threshold=0.2682, model_name="ConvNext_v3", drop_overlap=True)
                 features, keep_tags = process_features(drop_blacklisted_tags(features))
@@ -258,6 +284,8 @@ def process_image(image_path, args):
                 #    features = drop_basic_character_tags(features)
                 wd14_caption = tags_to_text(features, use_escape=False, use_spaces=True)
                 rating = max(rating, key=rating.get)
+            moe_caption = process_moe_image(image_resize, moe_model, moe_tokenizer, moe_processor, features)
+    
             if args.caption_style == 'mixed':
                 tags_text = (
                     f"the whole image consists of the following: |||{wd14_caption}|||, {moe_caption}\n"
