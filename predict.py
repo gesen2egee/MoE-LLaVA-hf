@@ -96,9 +96,9 @@ def modify_prompt(features: dict) -> str:
     # 檢查是否有 keys 符合 '^holding_.*$' 的正則表達式
     holding_keys = [key for key in features.keys() if re.match(r'^holding_.*$', key) or re.match(r'^.*grab.*$', key) or re.match(r'^.*behind.*$', key)]
     if holding_keys:
-        holding_keys_str = ', '.join(key.replace('_', '') for key in holding_keys)
+        holding_keys_str = ', '.join(key.replace('_', ' ') for key in holding_keys)
         default_prompt += f' Is {holding_keys_str}?'
-    print(default_prompt)
+    #print(default_prompt)
     return default_prompt
 
 def process_moe_image(image, model, tokenizer, processor, features=None):
