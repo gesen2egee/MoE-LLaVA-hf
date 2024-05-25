@@ -98,7 +98,7 @@ def modify_prompt(features: dict) -> str:
     if holding_keys:
         holding_keys_str = ', '.join(key.replace('_', '') for key in holding_keys)
         default_prompt += f' Is {holding_keys_str}?'
-    print('default_prompt')
+    print(default_prompt)
     return default_prompt
 
 def process_moe_image(image, model, tokenizer, processor, features=None):
