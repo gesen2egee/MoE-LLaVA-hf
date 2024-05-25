@@ -101,13 +101,13 @@ def modify_prompt(features: dict) -> str:
     #print(default_prompt)
     return default_prompt
 
-def process_moe_image(image, model, tokenizer, processor, features=None):
+def process_moe_image(image, model, tokenizer, processor, args, features=None):
     image_tensor = processor['image'].preprocess(image.convert('RGB'), return_tensors='pt')['pixel_values'].to(model.device, dtype=torch.float16)
     conv_mode = "phi"
     conv = conv_templates[conv_mode].copy()
     roles = conv.roles
     default_prompt ='\nWhat happens in this image? What does this image appears to be? How about this image?'
-    if features:
+    if features and args.modify_prompt:
         default_prompt = modify_prompt(features)    
     prompt = DEFAULT_IMAGE_TOKEN + default_prompt
     conv.append_message(conv.roles[0], prompt)
@@ -284,7 +284,7 @@ def process_image(image_path, args):
                 #    features = drop_basic_character_tags(features)
                 wd14_caption = tags_to_text(features, use_escape=False, use_spaces=True)
                 rating = max(rating, key=rating.get)
-            moe_caption = process_moe_image(image_resize, moe_model, moe_tokenizer, moe_processor, features)
+            moe_caption = process_moe_image(image_resize, moe_model, moe_tokenizer, moe_processor, args, features)
     
             if args.caption_style == 'mixed':
                 tags_text = (
@@ -351,6 +351,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="圖片標籤處理腳本")
     parser.add_argument("--folder_name", action="store_true", help="啟用特殊資料夾名稱處理")
     parser.add_argument("--moe", action="store_true", help="使用 MoE-LLaVA 模型處理 general 和 sensitive 圖片")
+    parser.add_argument("--modify_prompt", action="store_true", help="動態moe標")
     parser.add_argument("--force", action="store_true", help="強迫打標")
     parser.add_argument("--not_char", action="store_true", help="非角色")
     parser.add_argument("--caption_style", type=str, choices=["rating", "mixed", "wildcards", "pure"], default="mixed", help="指定圖片描述的風格")
