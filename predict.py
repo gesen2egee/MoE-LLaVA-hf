@@ -86,19 +86,22 @@ def modify_prompt(features: dict) -> str:
     if 'solo' not in features.keys():
         prompt_parts[0] += ' What are positions of whore image?'
     
-    pen_keys = [key for key in features.keys() if re.match(r'.*penis.*', key)]
-    if pen_keys:
-        prompt_parts[0] += " Where male's penis on?"
+    penis_keys = [key for key in features.keys() if re.match(r'.*penis.*', key)]
+    if penis_keys:
+        if [key for key in features.keys() if re.match(r'.*futa.*', key)]:
+            prompt_parts[0] +=  " Where futanari's penis on?"  
+        else:
+            prompt_parts[0] +=  " Where male's penis on?"
     
     # 組合提示詞
     default_prompt = ' What does this image appears to be?'.join(prompt_parts)
 
     # 檢查是否有 keys 符合 '^holding_.*$' 的正則表達式
-    holding_keys = [key for key in features.keys() if re.match(r'^holding_.*$', key) or re.match(r'^.*grab.*$', key) or re.match(r'^.*behind.*$', key)]
+    holding_keys = [key for key in features.keys() if re.match(r'^holding_.*$', key) or re.match(r'^.*grab.*$', key) or re.match(r'^.*behind.*$', key) or re.match(r'^.*another.*$', key) or re.match(r'^.*penis.*$', key) or re.match(r'^.*left.*$', key) or re.match(r'^.*pull$', key) or re.match(r'^.*out.*$', key) or re.match(r'^.*_masturbation.*$', key)]
     if holding_keys:
         holding_keys_str = ', '.join(key.replace('_', ' ') for key in holding_keys)
         default_prompt += f' Is {holding_keys_str}?'
-    #print(default_prompt)
+    
     return default_prompt
 
 def process_moe_image(image, model, tokenizer, processor, args, features=None):
@@ -309,7 +312,7 @@ def process_image(image_path, args):
 
         special_text, boorutag = generate_special_text(image_path, folder_name, args, features, chars)
         if rating:
-            special_text += f", rating:{rating}"
+            special_text += f", {{rating:{rating}|}}"
         if keep_tags:
             special_text += f", {keep_tags}"
         tags_lines = tags_text.split('\n')
