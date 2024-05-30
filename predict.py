@@ -204,7 +204,7 @@ def generate_special_text(image_path, folder_name, args, features=None, chars=No
             chartag_from_folder = parent_folder.split('_')[1].replace('_', ' ').strip()
             chartags.add(chartag_from_folder)
         else:
-            concept_tag = f"{parent_folder.split('_')[1].replace('_', ' ').strip()} is main concept of the whole image"}. "
+            concept_tag = f"{parent_folder.split('_')[1].replace('_', ' ').strip()} is main concept of the whole image"
             
     # 處理 boorutag 文件內容
     if boorutag_path:
