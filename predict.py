@@ -95,7 +95,7 @@ def modify_prompt(features: dict) -> str:
     default_prompt = ' What does this image appears to be?'.join(prompt_parts)
 
     # 檢查是否有 keys 符合 '^holding_.*$' 的正則表達式
-    holding_keys = [key for key in features.keys() if re.match(r'^holding_.*$', key) or re.match(r'^.*grab.*$', key) or re.match(r'^.*behind.*$', key) or re.match(r'^.*another.*$', key) or re.match(r'^.*penis.*$', key) or re.match(r'^.*left.*$', key) or re.match(r'^.*pull$', key) or re.match(r'^.*out.*$', key) or re.match(r'^.*_masturbation.*$', key) or re.match(r'^.*from.*$', key) or re.match(r'^.*_on_.*$', key) or re.match(r'^.*ion.*$', key) or re.match(r'^.*ion.*$', key) or re.match(r'^.*_at_.*$', key) or re.match(r'^.*ing.*$', key) or re.match(r'^.*_own_.*$', key)]
+    holding_keys = [key for key in features.keys() if re.match(r'^holding_.*$', key) or re.match(r'^.*grab.*$', key) or re.match(r'^.*behind.*$', key) or re.match(r'^.*another.*$', key) or re.match(r'^.*penis.*$', key) or re.match(r'^.*left.*$', key) or re.match(r'^.*pull$', key) or re.match(r'^.*out.*$', key) or re.match(r'^.*_masturbation.*$', key) or re.match(r'^.*from.*$', key) or re.match(r'^.*_on_.*$', key) or re.match(r'^.*ion.*$', key) or re.match(r'^.*ion.*$', key) or re.match(r'^.*_at_(?!viewer).*$', key) or re.match(r'^.*ing.*$', key) or re.match(r'^.*_own_.*$', key)]
     if holding_keys:
         holding_keys_str = ', '.join(key.replace('_', ' ') for key in holding_keys)
         default_prompt += f' Is {holding_keys_str}?'
