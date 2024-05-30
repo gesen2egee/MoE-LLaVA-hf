@@ -358,7 +358,7 @@ if __name__ == "__main__":
     parser.add_argument("--force", action="store_true", help="強迫打標")
     parser.add_argument("--not_char", action="store_true", help="非角色")
     parser.add_argument("--caption_style", type=str, choices=["rating", "mixed", "wildcards", "pure"], default="mixed", help="指定圖片描述的風格")
-    parser.add_argument("--model-path", type=str, default='LanguageBind/MoE-LLaVA-Phi2-2.7B-4e', help="設置 MoE-LLaVA 模型參數")
+    parser.add_argument("--model_path", type=str, default='LanguageBind/MoE-LLaVA-Phi2-2.7B-4e', help="設置 MoE-LLaVA 模型參數")
     parser.add_argument("directory", type=str, help="處理目錄地址")
     args = parser.parse_args()
 
