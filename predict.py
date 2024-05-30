@@ -51,14 +51,11 @@ except ImportError:
     from imgutils.tagging import get_wd14_tags, tags_to_text, drop_blacklisted_tags, drop_basic_character_tags, drop_overlap_tags
     from imgutils.validate import anime_dbrating
 
-# 設置 MoE-LLaVA 模型參數
-#MOE_MODEL_PATH = 'LanguageBind/MoE-LLaVA-StableLM-1.6B-4e-384'
-MOE_MODEL_PATH = 'LanguageBind/MoE-LLaVA-Phi2-2.7B-4e' #VRAM >= 16G
 MOE_DEVICE = 'cuda'
 
-def initialize_moe_model(model_path=MOE_MODEL_PATH, device=MOE_DEVICE):
+def initialize_moe_model(args.low_vram, device=MOE_DEVICE):
     disable_torch_init()
-    model_name = get_model_name_from_path(model_path)
+    model_path = 'LanguageBind/MoE-LLaVA-StableLM-1.6B-4e-384' if args.low_vram else 'LanguageBind/MoE-LLaVA-Phi2-2.7B-4e'
     tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name, load_8bit=False, load_4bit=False, device=device)
     return tokenizer, model, processor
 
@@ -358,12 +355,12 @@ if __name__ == "__main__":
     parser.add_argument("--force", action="store_true", help="強迫打標")
     parser.add_argument("--not_char", action="store_true", help="非角色")
     parser.add_argument("--caption_style", type=str, choices=["rating", "mixed", "wildcards", "pure"], default="mixed", help="指定圖片描述的風格")
-    parser.add_argument("--model_path", type=str, default='LanguageBind/MoE-LLaVA-Phi2-2.7B-4e', help="設置 MoE-LLaVA 模型參數")
+    parser.add_argument("--low_vram", action="store_true", help="設置 MoE-LLaVA 模型參數")
     parser.add_argument("directory", type=str, help="處理目錄地址")
     args = parser.parse_args()
 
     if args.moe:
-        moe_tokenizer, moe_model, moe_processor = initialize_moe_model(args.model_path, MOE_DEVICE)
+        moe_tokenizer, moe_model, moe_processor = initialize_moe_model(args.low_vram, MOE_DEVICE)
 
     directory = convert_path_format(args.directory)
     find_and_process_images(directory, args)
