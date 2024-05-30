@@ -310,7 +310,7 @@ def process_image(image_path, args):
 
         special_text, boorutag = generate_special_text(image_path, folder_name, args, features, chars)
         if rating:
-            special_text += f", {{rating:{rating}|}}"
+            special_text += f", {{rating:{rating}|}}" if rating in ['general', 'sensitive'] else f", rating:{rating}"
         if keep_tags:
             special_text += f", {keep_tags}"
         tags_lines = tags_text.split('\n')
