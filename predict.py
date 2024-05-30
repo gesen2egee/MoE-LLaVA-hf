@@ -56,6 +56,7 @@ MOE_DEVICE = 'cuda'
 def initialize_moe_model(args, device=MOE_DEVICE):
     disable_torch_init()
     model_path = 'LanguageBind/MoE-LLaVA-StableLM-1.6B-4e-384' if args.low_vram else 'LanguageBind/MoE-LLaVA-Phi2-2.7B-4e'
+    model_name = get_model_name_from_path(model_path)
     tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name, load_8bit=False, load_4bit=False, device=device)
     return tokenizer, model, processor
 
