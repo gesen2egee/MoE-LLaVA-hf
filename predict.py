@@ -53,7 +53,7 @@ except ImportError:
 
 MOE_DEVICE = 'cuda'
 
-def initialize_moe_model(args.low_vram, device=MOE_DEVICE):
+def initialize_moe_model(args, device=MOE_DEVICE):
     disable_torch_init()
     model_path = 'LanguageBind/MoE-LLaVA-StableLM-1.6B-4e-384' if args.low_vram else 'LanguageBind/MoE-LLaVA-Phi2-2.7B-4e'
     tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name, load_8bit=False, load_4bit=False, device=device)
@@ -360,7 +360,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.moe:
-        moe_tokenizer, moe_model, moe_processor = initialize_moe_model(args.low_vram, MOE_DEVICE)
+        moe_tokenizer, moe_model, moe_processor = initialize_moe_model(args, MOE_DEVICE)
 
     directory = convert_path_format(args.directory)
     find_and_process_images(directory, args)
