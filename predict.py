@@ -358,11 +358,12 @@ if __name__ == "__main__":
     parser.add_argument("--force", action="store_true", help="強迫打標")
     parser.add_argument("--not_char", action="store_true", help="非角色")
     parser.add_argument("--caption_style", type=str, choices=["rating", "mixed", "wildcards", "pure"], default="mixed", help="指定圖片描述的風格")
+    parser.add_argument("--model-path", type=str, default='LanguageBind/MoE-LLaVA-Phi2-2.7B-4e', help="設置 MoE-LLaVA 模型參數")
     parser.add_argument("directory", type=str, help="處理目錄地址")
     args = parser.parse_args()
 
     if args.moe:
-        moe_tokenizer, moe_model, moe_processor = initialize_moe_model()
+        moe_tokenizer, moe_model, moe_processor = initialize_moe_model(args.model_path, MOE_DEVICE)
 
     directory = convert_path_format(args.directory)
     find_and_process_images(directory, args)
