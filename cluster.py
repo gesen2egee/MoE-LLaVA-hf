@@ -403,15 +403,15 @@ def process_subfolder(subfolder_path: str, args, md_filepath: str):
             cluster_text += f'{cluster_name}, '
 
         for tag in new_tags:
-            if not contains_color(tag) and tag not in cluster_text:
+            if not contains_color(tag) and tag not in cluster_text and tag not in new_caption:
                 if tag in cluster_costume_tags:
                     cluster_text += f'{tag}, '
-                elif tag in cluster_scene_tags:
-                    cluster_text += f'{tag}, ' if 'explicit' in lines[0] else f'{tag}, ' if 'questionable' in lines[0] else ''
+                elif tag in cluster_scene_tags and ('explicit' in lines[0] or 'questionable' in lines[0]):
+                    cluster_text += f'{tag}, '
                 elif tag in cluster_appearance_tags and tag in appearance_tags:
                     cluster_text += f'{tag}, '
                 else:
-                    new_caption += f'{tag}, ' if (not args.cluster_appearance or tag not in appearance_tags) else ''
+                    new_caption += f'{tag}, '
 
         for i in range(len(lines)):
             line = lines[i].strip()
