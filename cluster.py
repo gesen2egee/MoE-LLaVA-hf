@@ -649,7 +649,10 @@ def main():
         md_file.write("# 聚類結果\n\n")      
 
     for subfolder in subfolders:
-        process_subfolder(subfolder, args, md_filepath)
+        try:
+            process_subfolder(subfolder, args, md_filepath)
+        except:
+            print(f"{subfolders}處理出錯 略過")
 
 if __name__ == "__main__":
     main()
