@@ -237,7 +237,7 @@ def process_clustering(image_info_list: List[Dict[str, Optional[str]]], tags_lis
             cluster_df = pd.DataFrame(X_shifted[temp_pred == i], columns=feature_names)
             cluster_tags_df = cluster_df.iloc[:, X_selected_index]
             mean_values = cluster_tags_df.mean(axis=0)
-            prompt_tags_list = mean_values.nlargest(8).index.tolist()
+            prompt_tags_list = mean_values.nlargest(10).index.tolist()
             cluster_feature_tags_list.append({"prompt": prompt_tags_list})
         return cluster_feature_tags_list
 
@@ -268,8 +268,8 @@ def process_clustering(image_info_list: List[Dict[str, Optional[str]]], tags_lis
             cluster_prompt = ', '.join(cluster_feature_tags_list[cluster_id]['prompt'])
             cluster_name = 'no'
             if cluster_prefix == "costume_" or "appearance_":
-                if idx < 20 and is_clustering(cluster_prompt, clothing_tags):
-                    cluster_name = f"costume_{idx}" 
+                if idx < 20 and is_clustering(cluster_prompt, clothing_tags if cluster_prefix == "costume_" else appearance_tags):
+                    cluster_name = f"{cluster_prefix}{idx}" 
                     if naming_mode != 'auto':
                         images = [info['path'] for info in image_info_list if y_pred[image_info_list.index(info)] == cluster_id and not is_nsfw(info['all_tags'])][:8]
                         if images is None:
