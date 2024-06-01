@@ -3,13 +3,11 @@ import math
 from typing import List, Dict, Optional, Tuple, Set
 import glob
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
 import argparse
 import shutil
 import subprocess
 import os
-import cv2
 import base64
 from io import BytesIO
 import zipfile
@@ -30,17 +28,29 @@ libraries = [
     'pathlib',
     'datetime',
     'matplotlib',
-    'natsort'
+    'natsort',
+    'pandas'
 ]
+
+
+for lib in libraries:
+    install_and_import(lib)
+    
 from PIL import Image
 from datetime import datetime, timedelta
 from pathlib import Path
 import matplotlib.pyplot as plt
 from openai import OpenAI
 from natsort import natsorted
+import pandas as pd
 
-for lib in libraries:
-    install_and_import(lib)
+
+try:
+    import cv2
+except ImportError:    
+    subprocess.run(["pip", "install", "Opencv-python"], check=True)
+    import cv2
+
 
 try:
     from imgutils.validate import anime_dbrating
@@ -57,7 +67,6 @@ IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".bmp"]
 GPT4O_API_KEY = "GPT4O_API_KEY"
 MODEL = "gpt-4o"
 client = OpenAI(api_key=GPT4O_API_KEY)
-
 
 # 內建的外表標籤名單image_base_names
 appearance_tags = {
