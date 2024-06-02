@@ -276,7 +276,7 @@ def process_clustering(image_info_list: List[Dict[str, Optional[str]]], tags_lis
             nsfw = False
             cluster_prompt = ', '.join(cluster_feature_tags_list[cluster_id]['prompt'])
             cluster_name = 'no'
-            if cluster_prefix == "costume_" or "appearance_":
+            if cluster_prefix == "costume_" or cluster_prefix == "appearance_":
                 if idx < 20 and is_clustering(cluster_prompt, clothing_tags if cluster_prefix == "costume_" else appearance_tags):
                     cluster_name = f"{cluster_prefix}{idx}" 
                     if naming_mode != 'auto':
@@ -586,7 +586,7 @@ def process_subfolder(subfolder_path: str, args, md_filepath: str):
 
     solo_info_list = [info for info in image_info_list if 'solo' in info['all_tags'] and 'completely nude' not in info['all_tags']]
     costume_tags_list = [info['costume'] for info in solo_info_list]
-    n_clusters = min(300, math.ceil(len(image_info_list) / 10) + 1)
+    n_clusters = min(300, math.ceil(len(solo_info_list) / 5) + 1)
 
     print("開始聚類...")
     if len(costume_tags_list) > 0:
@@ -595,15 +595,17 @@ def process_subfolder(subfolder_path: str, args, md_filepath: str):
 
     if args.cluster_appearance: 
         appearance_tags_list = [info['appearance'] for info in solo_info_list]
-        n_clusters = min(300, math.ceil(len(image_info_list) / 10) + 1)
-        process_clustering(solo_info_list, appearance_tags_list, n_clusters, 'appearance_', args)
-        print("外型聚類完成")
+        if len(appearance_tags_list) > 0:
+            n_clusters = min(300, math.ceil(len(solo_info_list) / 5) + 1)
+            process_clustering(solo_info_list, appearance_tags_list, n_clusters, 'appearance_', args)
+            print("外型聚類完成")
         
     if args.cluster_scene:
         scene_tags_list = [info['scene'] for info in image_info_list]
-        n_clusters = min(300, math.ceil(len(image_info_list) / 10) + 1)        
-        process_clustering(image_info_list, scene_tags_list, n_clusters, 'scene_', args)
-        print("場景聚類完成")
+        if len(scene_tags_list) > 0:
+            n_clusters = min(300, math.ceil(len(image_info_list) / 10) + 1)        
+            process_clustering(image_info_list, scene_tags_list, n_clusters, 'scene_', args)
+            print("場景聚類完成")
         
     if not args.dry_run:
         for info in image_info_list:
