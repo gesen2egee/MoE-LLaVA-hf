@@ -289,7 +289,7 @@ def process_image(image_path, args):
     
             if args.caption_style == 'mixed':
                 tags_text = (
-                    f"the whole image consists of the following: |||{wd14_caption}|||, {moe_caption}\n"
+                    f"the whole image consists of the following: ___{wd14_caption}___, {moe_caption}\n"
                     f"{moe_caption}\n{moe_caption}"
                     + ('\n' if folder_name else '')
                     + ('\n' if "solo" in features else '')
