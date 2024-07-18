@@ -84,7 +84,7 @@ def generate_response(tokenizer, model, image_processor, image, wd14_caption, ch
     conv_mode = "phi"
     conv = conv_templates[conv_mode].copy()
     roles = conv.roles
-    default_prompt ='f"\nUse {chartags} as the name of person(s). What happens in this image? What does this image appears to be? How about this image? Give me detailed and long description with {wd14_caption}"
+    default_prompt = f"\nUse {chartags} as the name of person(s). What happens in this image? What does this image appears to be? How about this image? Give me detailed and long description with {wd14_caption}"
     prompt = DEFAULT_IMAGE_TOKEN + default_prompt
     conv.append_message(conv.roles[0], prompt)
     conv.append_message(conv.roles[1], None)
