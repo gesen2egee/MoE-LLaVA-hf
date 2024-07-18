@@ -67,7 +67,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 disable_torch_init()
 model_path = 'LanguageBind/MoE-LLaVA-Phi2-2.7B-4e'
 model_name = get_model_name_from_path(model_path)
-tokenizer, model, image_processor, context_len = load_pretrained_model(model_path, None, model_name, load_8bit=False, load_4bit=False, device=device)
+tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name, load_8bit=False, load_4bit=False, device=device)
 
 aes_model, aes_preprocessor = convert_v2_5_from_siglip(
     low_cpu_mem_usage=True,
@@ -75,7 +75,7 @@ aes_model, aes_preprocessor = convert_v2_5_from_siglip(
 )
 aes_model = aes_model.to(torch.bfloat16).to(device)
 
-def generate_response(tokenizer, model, image_processor, image, wd14_caption, chartags):
+def generate_response(tokenizer, model, processor, image, wd14_caption, chartags):
 
     image_tensor = processor['image'].preprocess(image.convert('RGB'), return_tensors='pt')['pixel_values'].to(model.device, dtype=torch.float16)
     conv_mode = "phi"
@@ -304,7 +304,7 @@ def process_image(image_path, args):
         wd14_caption = wd14_caption + ', ' + boorutag + f", rating:{ratingtag}"
         wd14_caption = format_wd14_caption(wd14_caption)
         aestag = get_aesthetic_tag(image)
-        more_detailed_caption, firsttag = generate_response(tokenizer, model, image_processor, image, wd14_caption + ', ' + aestag, chartags)
+        more_detailed_caption, firsttag = generate_response(tokenizer, model, processor, image, wd14_caption + ', ' + aestag, chartags)
         aestag = f"{aestag} " if 'bad' in aestag else ''
         tags_text = f"{keeptag}, {firsttag}, {aestag}___{more_detailed_caption}"
         if args.enable_wildcard:
