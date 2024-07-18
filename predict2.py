@@ -61,8 +61,6 @@ except ImportError:
     from imgutils.tagging import get_wd14_tags, tags_to_text, drop_blacklisted_tags, drop_basic_character_tags, drop_overlap_tags
     from imgutils.validate import anime_dbrating
 
-MOE_DEVICE = 'cuda'
-tokenizer, model, image_processor = initialize_moe_model(args, MOE_DEVICE)
 
 def initialize_moe_model(args, device=MOE_DEVICE):
     disable_torch_init()
@@ -70,6 +68,9 @@ def initialize_moe_model(args, device=MOE_DEVICE):
     model_name = get_model_name_from_path(model_path)
     tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name, load_8bit=False, load_4bit=False, device=device)
     return tokenizer, model, processor
+
+MOE_DEVICE = 'cuda'
+tokenizer, model, image_processor = initialize_moe_model(args, MOE_DEVICE)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
