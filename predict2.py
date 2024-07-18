@@ -65,7 +65,7 @@ except ImportError:
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 disable_torch_init()
-model_path = 'LanguageBind/MoE-LLaVA-StableLM-1.6B-4e-384' if args.low_vram else 'LanguageBind/MoE-LLaVA-Phi2-2.7B-4e'
+model_path = 'LanguageBind/MoE-LLaVA-Phi2-2.7B-4e'
 model_name = get_model_name_from_path(model_path)
 tokenizer, model, image_processor, context_len = load_pretrained_model(model_path, None, model_name, load_8bit=False, load_4bit=False, device=device)
 
