@@ -62,18 +62,12 @@ except ImportError:
     from imgutils.validate import anime_dbrating
 
 
-MOE_DEVICE = 'cuda'
-
-def initialize_moe_model(args, device=MOE_DEVICE):
-    disable_torch_init()
-    model_path = 'LanguageBind/MoE-LLaVA-StableLM-1.6B-4e-384' if args.low_vram else 'LanguageBind/MoE-LLaVA-Phi2-2.7B-4e'
-    model_name = get_model_name_from_path(model_path)
-    tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name, load_8bit=False, load_4bit=False, device=device)
-    return tokenizer, model, processor
-
-tokenizer, model, image_processor = initialize_moe_model(args, MOE_DEVICE)
-
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+disable_torch_init()
+model_path = 'LanguageBind/MoE-LLaVA-StableLM-1.6B-4e-384' if args.low_vram else 'LanguageBind/MoE-LLaVA-Phi2-2.7B-4e'
+model_name = get_model_name_from_path(model_path)
+tokenizer, model, image_processor, context_len = load_pretrained_model(model_path, None, model_name, load_8bit=False, load_4bit=False, device=device)
 
 aes_model, aes_preprocessor = convert_v2_5_from_siglip(
     low_cpu_mem_usage=True,
@@ -349,6 +343,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="圖片標籤處理腳本")
     parser.add_argument("--folder_name", action="store_true", help="使用目錄名當作角色名")
     parser.add_argument("--enable_wildcard", action="store_true", help="wildcard多行")
+    parser.add_argument("--low_vram", action="store_true", help="使用1.6Bmoe模型")
     parser.add_argument("directory", type=str, help="處理目錄地址")
     args = parser.parse_args()
     find_and_process_images(args.directory, args)
