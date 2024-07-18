@@ -27,6 +27,7 @@ libraries = [
     'pathlib',
     'datetime',
     'torch',
+    'onnxruntime',
     'aesthetic_predictor_v2_5',
     'moellava'
 ]
