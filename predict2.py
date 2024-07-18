@@ -27,14 +27,13 @@ libraries = [
     'pathlib',
     'datetime',
     'torch',
-    'onnxruntime',
     'aesthetic_predictor_v2_5',
     'moellava'
 ]
 
 for lib in libraries:
     install_and_import(lib)
-
+import onnxruntime
 import torch
 from io import BytesIO
 from pathlib import Path
